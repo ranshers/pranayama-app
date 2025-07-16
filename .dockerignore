@@ -1,0 +1,13 @@
+# Ignore Node.js modules and local environment files.
+node_modules
+.env
+npm-debug.log
+
+# Ignore build output folder.
+build
+
+# Ignore git and docker files.
+.git
+.gitignore
+Dockerfile
+.dockerignore
