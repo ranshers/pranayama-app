@@ -1,70 +1,31 @@
-# Getting Started with Create React App
+export PROJECT_ID="nibbly-prod"
+export REGION="us-central1"
+export REPO_NAME="pranayama-repo"
+export IMAGE_NAME="pranayama-app"
+export SERVICE_NAME="pranayama-app-service"
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Next, enable the necessary Google Cloud services:
 
-## Available Scripts
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
 
-In the project directory, you can run:
+Create a repository in Artifact Registry to store your container image:
 
-### `npm start`
+gcloud artifacts repositories create "$REPO_NAME" \
+    --repository-format=docker \
+    --location="$REGION" \
+    --description="Repository for Pranayama app"
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Now, submit your code to Cloud Build. This command will read your Dockerfile, build the container image, and push it to the Artifact Registry repository you just created:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+gcloud builds submit . \
+    --tag="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest"
 
-### `npm test`
+Finally, deploy your container image to Cloud Run. This command creates a new Cloud Run service, points it to your container image, and makes it publicly accessible:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+gcloud run deploy "$SERVICE_NAME" \
+    --image="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/${IMAGE_NAME}:latest" \
+    --platform="managed" \
+    --region="$REGION" \
+    --allow-unauthenticated
 
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+After the final command completes successfully, it will output the URL for your newly deployed service. You can visit this URL in your browser to see your live Pranayama application.
