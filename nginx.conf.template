@@ -1,0 +1,27 @@
+# This is an Nginx server configuration template.
+# It's used to dynamically set the listening port from an environment variable.
+
+server {
+    # The 'listen' directive is configured to use the PORT environment variable.
+    # Cloud Run sets this variable automatically (typically to 8080).
+    # The 'envsubst' command in the Dockerfile will replace ${PORT} with the actual port number.
+    listen       ${PORT};
+    server_name  localhost;
+
+    # Root directory for serving static files.
+    root   /usr/share/nginx/html;
+    index  index.html index.htm;
+
+    location / {
+        # This is crucial for single-page applications (like React).
+        # It ensures that if a user refreshes the page on a route like /about,
+        # Nginx will serve the main index.html file, allowing React Router to handle the routing.
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Standard error page configuration.
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

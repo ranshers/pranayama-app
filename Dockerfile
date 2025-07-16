@@ -24,11 +24,24 @@ RUN npm run build
 # This stage creates the final, smaller production image.
 FROM nginx:1.25-alpine
 
+# Remove the default Nginx configuration file.
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copy our custom Nginx configuration template into the image.
+# This template contains a placeholder for the port number.
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+
 # Copy the built static files from the 'build' stage to the Nginx public directory.
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Expose port 80 to allow traffic to the Nginx server.
-EXPOSE 80
+# Expose port 8080. This is good practice for documentation, though Cloud Run
+# primarily relies on the PORT environment variable to route traffic.
+EXPOSE 8080
 
-# The default Nginx command will start the server.
-# CMD ["nginx", "-g", "daemon off;"] is the default command for this image.
+# This is the command that runs when the container starts.
+# 1. `envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf`
+#    This command takes the template file, substitutes the ${PORT} variable with the value
+#    provided by Cloud Run's environment, and creates a final config file.
+# 2. `nginx -g 'daemon off;'`
+#    This starts the Nginx server in the foreground.
+CMD ["/bin/sh", "-c", "envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
